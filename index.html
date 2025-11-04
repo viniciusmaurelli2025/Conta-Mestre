@@ -10,14 +10,42 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary-rgb: 0 122 94; /* #007A5E */
+      --color-accent-rgb: 255 200 87; /* #FFC857 */
+      --color-dark-gray-rgb: 31 41 55; /* #1F2937 */
+    }
+  </style>
   <script>
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : null;
+    }
+
+    // Apply theme from localStorage on initial load
+    try {
+      const savedTheme = localStorage.getItem('contaMestreTheme');
+      if (savedTheme) {
+        const { primaryColor, accentColor } = JSON.parse(savedTheme);
+        if (primaryColor) {
+          document.documentElement.style.setProperty('--color-primary-rgb', hexToRgb(primaryColor));
+        }
+        if (accentColor) {
+          document.documentElement.style.setProperty('--color-accent-rgb', hexToRgb(accentColor));
+        }
+      }
+    } catch (e) {
+      console.error('Failed to apply saved theme.', e);
+    }
+    
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            'primary-green': '#007A5E',
-            'accent-yellow': '#FFC857',
-            'dark-gray': '#1F2937',
+            'primary-green': 'rgb(var(--color-primary-rgb) / <alpha-value>)',
+            'accent-yellow': 'rgb(var(--color-accent-rgb) / <alpha-value>)',
+            'dark-gray': 'rgb(var(--color-dark-gray-rgb) / <alpha-value>)',
             'light-gray': '#F3F4F6',
           },
           fontFamily: {

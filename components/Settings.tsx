@@ -1,5 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Theme } from '../App';
+import { ArrowUpTrayIcon, TrashIcon } from './icons/Icons';
 
 const Toggle: React.FC<{ label: string; enabled: boolean; onChange: (enabled: boolean) => void }> = ({ label, enabled, onChange }) => (
     <label className="flex items-center justify-between cursor-pointer">
@@ -12,8 +13,14 @@ const Toggle: React.FC<{ label: string; enabled: boolean; onChange: (enabled: bo
     </label>
 );
 
-export const Settings: React.FC = () => {
-    const [profile, setProfile] = useState({ name: 'Usuário', email: 'usuario@contamestre.com' });
+interface SettingsProps {
+    theme: Theme;
+    onThemeChange: (newTheme: Partial<Theme>) => void;
+    onResetTheme: () => void;
+}
+
+export const Settings: React.FC<SettingsProps> = ({ theme, onThemeChange, onResetTheme }) => {
+    const [profile] = useState({ name: 'Usuário', email: 'usuario@contamestre.com' });
     const [notifications, setNotifications] = useState({
         upcomingBills: true,
         unusualExpenses: true,
@@ -22,57 +29,146 @@ export const Settings: React.FC = () => {
         push: true,
         sms: false
     });
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                onThemeChange({ logo: reader.result as string });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    const removeLogo = () => {
+      onThemeChange({ logo: null });
+       if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    };
+
+    const handleSave = () => {
+        setSaveStatus('saving');
+        // Simulate API call
+        setTimeout(() => {
+            setSaveStatus('success');
+        }, 1500);
+    };
+
+    useEffect(() => {
+        if (saveStatus === 'success') {
+            const timer = setTimeout(() => {
+                setSaveStatus('idle');
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [saveStatus]);
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             <h2 className="text-3xl font-bold text-dark-gray">Configurações</h2>
-
-            {/* Profile Section */}
+            
+            {/* Profile Info Card */}
             <div className="bg-white p-6 rounded-2xl shadow-md">
-                <h3 className="text-xl font-bold text-dark-gray mb-4">Perfil</h3>
-                <div className="space-y-4">
-                     <div>
-                        <label className="text-sm font-medium text-dark-gray block mb-1">Nome</label>
-                        <input type="text" value={profile.name} onChange={(e) => setProfile(p => ({...p, name: e.target.value}))} className="w-full border-gray-300 rounded-lg focus:ring-primary-green" />
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium text-dark-gray block mb-1">Email</label>
-                        <input type="email" value={profile.email} onChange={(e) => setProfile(p => ({...p, email: e.target.value}))} className="w-full border-gray-300 rounded-lg focus:ring-primary-green" />
-                    </div>
-                </div>
+                <p className="text-sm text-gray-500">Email</p>
+                <p className="text-dark-gray font-semibold mt-1">{profile.email}</p>
             </div>
 
             {/* Notifications Section */}
             <div className="bg-white p-6 rounded-2xl shadow-md">
-                <h3 className="text-xl font-bold text-dark-gray mb-4">Notificações</h3>
-                <div className="space-y-4">
-                    <p className="text-sm font-semibold text-dark-gray">Alertas Inteligentes</p>
-                    <Toggle label="Vencimentos Próximos" enabled={notifications.upcomingBills} onChange={e => setNotifications(n => ({...n, upcomingBills: e}))} />
-                    <Toggle label="Despesas Incomuns" enabled={notifications.unusualExpenses} onChange={e => setNotifications(n => ({...n, unusualExpenses: e}))} />
-                    <Toggle label="Novidades de Investimentos" enabled={notifications.investmentUpdates} onChange={e => setNotifications(n => ({...n, investmentUpdates: e}))} />
-                    
-                    <p className="text-sm font-semibold text-dark-gray pt-4">Canais de Entrega</p>
-                    <Toggle label="Email" enabled={notifications.email} onChange={e => setNotifications(n => ({...n, email: e}))} />
-                    <Toggle label="Notificação Push" enabled={notifications.push} onChange={e => setNotifications(n => ({...n, push: e}))} />
-                    <Toggle label="SMS" enabled={notifications.sms} onChange={e => setNotifications(n => ({...n, sms: e}))} />
+                <h3 className="text-xl font-bold text-dark-gray mb-6">Notificações</h3>
+                <div className="space-y-5">
+                    <div>
+                        <p className="text-sm font-semibold text-dark-gray mb-3">Alertas Inteligentes</p>
+                        <div className="space-y-4">
+                            <Toggle label="Vencimentos Próximos" enabled={notifications.upcomingBills} onChange={e => setNotifications(n => ({...n, upcomingBills: e}))} />
+                            <Toggle label="Despesas Incomuns" enabled={notifications.unusualExpenses} onChange={e => setNotifications(n => ({...n, unusualExpenses: e}))} />
+                            <Toggle label="Novidades de Investimentos" enabled={notifications.investmentUpdates} onChange={e => setNotifications(n => ({...n, investmentUpdates: e}))} />
+                        </div>
+                    </div>
+                    <div className="pt-5 border-t border-gray-100">
+                        <p className="text-sm font-semibold text-dark-gray mb-3">Canais de Entrega</p>
+                        <div className="space-y-4">
+                            <Toggle label="Email" enabled={notifications.email} onChange={e => setNotifications(n => ({...n, email: e}))} />
+                            <Toggle label="Notificação Push" enabled={notifications.push} onChange={e => setNotifications(n => ({...n, push: e}))} />
+                            <Toggle label="SMS" enabled={notifications.sms} onChange={e => setNotifications(n => ({...n, sms: e}))} />
+                        </div>
+                    </div>
                 </div>
             </div>
 
              {/* Security Section */}
              <div className="bg-white p-6 rounded-2xl shadow-md">
-                <h3 className="text-xl font-bold text-dark-gray mb-4">Segurança</h3>
+                <h3 className="text-xl font-bold text-dark-gray mb-6">Segurança</h3>
                  <div className="space-y-4">
-                    <button className="text-sm font-medium text-primary-green hover:underline">Alterar Senha</button>
+                    <div className="flex justify-between items-center">
+                        <p className="text-sm text-dark-gray">Alterar Senha</p>
+                        <button className="text-sm font-medium text-primary-green hover:underline">Alterar</button>
+                    </div>
                     <div className="flex justify-between items-center">
                         <p className="text-sm text-dark-gray">Autenticação de Dois Fatores (2FA)</p>
-                        <button className="px-3 py-1.5 text-sm bg-primary-green text-white rounded-lg hover:bg-green-800">Ativar</button>
+                        <button className="px-3 py-1.5 text-sm bg-primary-green text-white rounded-lg hover:opacity-90">Ativar</button>
                     </div>
                  </div>
             </div>
 
-            <div className="flex justify-end">
-                <button className="px-6 py-2 bg-primary-green text-white rounded-lg font-semibold hover:bg-green-800 transition-colors shadow">
-                    Salvar Alterações
+            {/* Brand Customization Section */}
+            <div className="bg-white p-6 rounded-2xl shadow-md">
+                <h3 className="text-xl font-bold text-dark-gray mb-4">Personalização da Marca</h3>
+                <div className="space-y-6">
+                    <div>
+                        <label className="text-sm font-medium text-dark-gray block mb-2">Logo da Empresa</label>
+                        <div className="flex items-center gap-4">
+                            <div className="w-24 h-24 bg-light-gray rounded-lg flex items-center justify-center border border-dashed">
+                                {theme.logo ? <img src={theme.logo} alt="Logo Preview" className="max-w-full max-h-full object-contain"/> : <span className="text-xs text-gray-400">Preview</span>}
+                            </div>
+                            <div className="flex-1">
+                                <input type="file" accept="image/*" ref={fileInputRef} onChange={handleLogoUpload} className="hidden"/>
+                                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-dark-gray rounded-lg font-semibold hover:bg-light-gray transition-colors text-sm">
+                                    <ArrowUpTrayIcon className="w-5 h-5" />
+                                    Carregar Logo
+                                </button>
+                                {theme.logo && <button onClick={removeLogo} className="flex items-center gap-2 mt-2 px-4 py-2 text-red-600 hover:text-red-800 transition-colors text-sm font-medium">
+                                    <TrashIcon className="w-4 h-4" />
+                                    Remover Logo
+                                </button>}
+                            </div>
+                        </div>
+                    </div>
+                     <div>
+                        <label className="text-sm font-medium text-dark-gray block mb-2">Cores da Marca</label>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="primaryColor" className="text-sm text-gray-600">Primária</label>
+                                <input id="primaryColor" type="color" value={theme.primaryColor} onChange={e => onThemeChange({primaryColor: e.target.value})} className="w-10 h-10 p-1 bg-white border border-gray-300 rounded-md cursor-pointer"/>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <label htmlFor="accentColor" className="text-sm text-gray-600">Destaque</label>
+                                <input id="accentColor" type="color" value={theme.accentColor} onChange={e => onThemeChange({accentColor: e.target.value})} className="w-10 h-10 p-1 bg-white border border-gray-300 rounded-md cursor-pointer"/>
+                            </div>
+                         </div>
+                    </div>
+                    <div className="pt-4 border-t border-gray-100">
+                         <button onClick={onResetTheme} className="text-sm font-medium text-primary-green hover:underline">
+                            Redefinir para Padrão
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-end items-center gap-4 py-4">
+                 {saveStatus === 'success' && (
+                     <p className="text-sm text-green-600 font-medium transition-opacity duration-300">Alterações salvas com sucesso!</p>
+                 )}
+                <button 
+                    onClick={handleSave} 
+                    disabled={saveStatus === 'saving'}
+                    className="px-6 py-2 bg-primary-green text-white rounded-lg font-semibold hover:opacity-90 transition-all shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    {saveStatus === 'saving' ? 'Salvando...' : 'Salvar Alterações'}
                 </button>
             </div>
         </div>

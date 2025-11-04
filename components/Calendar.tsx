@@ -41,7 +41,8 @@ const EventModal: React.FC<{
     onClose: () => void;
     onSave: (event: Omit<CalendarEvent, 'id'> & { id?: number }) => void;
 }> = ({ event, onClose, onSave }) => {
-    const [formData, setFormData] = useState<Omit<CalendarEvent, 'id'> & { id?: number; date: string }>({
+    // FIX: Omitted 'date' from CalendarEvent before intersecting to avoid creating a `Date & string` type for the date property.
+    const [formData, setFormData] = useState<Omit<CalendarEvent, 'id' | 'date'> & { id?: number; date: string }>({
         title: event?.title || '',
         amount: event?.amount || 0,
         status: event?.status || 'pending',

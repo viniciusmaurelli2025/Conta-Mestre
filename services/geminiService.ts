@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { ChatMessage } from '../types';
 
@@ -25,12 +24,21 @@ export const askMestreIA = async (prompt: string, history: ChatMessage[]): Promi
   try {
     const model = 'gemini-2.5-flash';
     
-    // Format history for the API if needed, for now just using the new prompt
-    // For a real chat, you would map history to the `contents` format.
+    // FIX: Map chat history and current prompt to the format expected by the Gemini API for conversational context.
+    const contents = [
+      ...history.map((message) => ({
+        role: message.role,
+        parts: [{ text: message.text }],
+      })),
+      {
+        role: 'user',
+        parts: [{ text: prompt }],
+      },
+    ];
 
     const response = await ai.models.generateContent({
         model: model,
-        contents: `${prompt}`, // In a real chat, you'd format this with history.
+        contents: contents,
         config: {
             systemInstruction: systemInstruction,
             temperature: 0.7,
