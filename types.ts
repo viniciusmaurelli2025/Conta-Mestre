@@ -103,3 +103,11 @@ export interface CommunityPost {
     gifUrl: string | null;
     poll: Poll | null;
 }
+
+export interface Boleto {
+  id: number;
+  name: string;
+  dueDate: string; // YYYY-MM-DD
+  amount: number;
+  paid: boolean;
+}

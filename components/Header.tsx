@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { BellIcon, MagnifyingGlassIcon, ChevronDownIcon, ArrowRightOnRectangleIcon, UserCircleIcon, Cog6ToothIcon } from './icons/Icons';
 import { UserProfile } from '../types';
 
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile';
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile' | 'checklist';
 
 interface HeaderProps {
   onLogout: () => void;

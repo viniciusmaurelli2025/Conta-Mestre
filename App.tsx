@@ -12,11 +12,12 @@ import { Settings } from './components/Settings';
 import { Goals } from './components/Goals';
 import { LoginScreen } from './components/LoginScreen';
 import { Profile } from './components/Profile';
-import { UserProfile, Transaction, Goal, Kpi } from './types';
+import { UserProfile, Transaction, Goal, Kpi, Boleto } from './types';
 import { DocumentTextIcon, WalletIcon, ArrowUpIcon, ArrowDownIcon, CalendarDaysIcon } from './components/icons/Icons';
+import { Checklist } from './components/Checklist';
 
 
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile';
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile' | 'checklist';
 
 export interface Theme {
   logo: string | null;
@@ -38,6 +39,15 @@ const hexToRgb = (hex: string): string => {
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+const mockBoletos: Boleto[] = [
+  { id: 1, name: 'Conta de Luz (Energisa)', dueDate: '2024-08-10', amount: 150.75, paid: false },
+  { id: 2, name: 'Plano de Internet (Vivo Fibra)', dueDate: '2024-08-12', amount: 99.90, paid: false },
+  { id: 3, name: 'Aluguel', dueDate: '2024-08-05', amount: 1800.00, paid: true },
+  { id: 4, name: 'Fatura Cartão Nubank', dueDate: '2024-08-15', amount: 854.20, paid: false },
+  { id: 5, name: 'Mensalidade Academia', dueDate: '2024-08-20', amount: 120.00, paid: false },
+  { id: 6, name: 'Seguro do Carro', dueDate: '2024-09-01', amount: 250.00, paid: false },
+];
+
 
 const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>('dashboard');
@@ -45,6 +55,7 @@ const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [boletos, setBoletos] = useState<Boleto[]>(mockBoletos);
 
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: 'Usuário',
@@ -61,42 +72,70 @@ const App: React.FC = () => {
     // In a real app, you would also save this to a backend.
   };
 
-  const handleSaveTransaction = (transactionData: Omit<Transaction, 'id'> & { id?: number }) => {
+  const handleSaveTransaction = useCallback((transactionData: Omit<Transaction, 'id'> & { id?: number }) => {
+    setTransactions(prev => {
         if (transactionData.id) {
-            setTransactions(transactions.map(t => t.id === transactionData.id ? { ...t, ...transactionData } as Transaction : t));
+            return prev.map(t => t.id === transactionData.id ? { ...t, ...transactionData } as Transaction : t);
         } else {
             const newTransaction: Transaction = {
                 ...transactionData,
-                id: Math.max(0, ...transactions.map(t => t.id)) + 1,
+                id: Math.max(0, ...prev.map(t => t.id), 0) + 1,
             };
-            setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            return [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         }
-    };
+    });
+  }, []);
 
-    const handleDeleteTransaction = (id: number) => {
-        setTransactions(transactions.filter(t => t.id !== id));
-    };
+  const handleDeleteTransaction = useCallback((id: number) => {
+      setTransactions(prev => prev.filter(t => t.id !== id));
+  }, []);
 
-    const handleSaveGoal = (goalData: Omit<Goal, 'id' | 'icon'> & { id?: number }) => {
-        if (goalData.id) {
-            setGoals(goals.map(g => g.id === goalData.id ? { ...g, ...goalData } as Goal : g));
+  const handleSaveGoal = useCallback((goalData: Omit<Goal, 'id' | 'icon'> & { id?: number }) => {
+    setGoals(prev => {
+      if (goalData.id) {
+          return prev.map(g => g.id === goalData.id ? { ...g, ...goalData } as Goal : g);
+      } else {
+          const newGoal: Goal = {
+              ...goalData,
+              id: Math.max(0, ...prev.map(g => g.id), 0) + 1,
+              icon: <DocumentTextIcon className="w-8 h-8"/>,
+          };
+          return [newGoal, ...prev];
+      }
+    });
+  }, []);
+
+  const handleDeleteGoal = useCallback((id: number) => {
+      setGoals(prev => prev.filter(g => g.id !== id));
+  }, []);
+
+  const handleContributeToGoal = useCallback((goalId: number, amount: number) => {
+      setGoals(prev => prev.map(g => g.id === goalId ? {...g, currentAmount: g.currentAmount + amount} : g));
+  }, []);
+    
+    const handleToggleBoletoPaid = useCallback((id: number) => {
+        setBoletos(prev => prev.map(b => b.id === id ? { ...b, paid: !b.paid } : b));
+    }, []);
+
+    const handleSaveBoleto = useCallback((boletoData: Omit<Boleto, 'id' | 'paid'> & { id?: number }) => {
+        if (boletoData.id) {
+            setBoletos(prev => prev.map(b => b.id === boletoData.id ? { ...b, ...boletoData, amount: Number(boletoData.amount) } as Boleto : b));
         } else {
-            const newGoal: Goal = {
-                ...goalData,
-                id: Math.max(0, ...goals.map(g => g.id)) + 1,
-                icon: <DocumentTextIcon className="w-8 h-8"/>,
-            };
-            setGoals(prev => [newGoal, ...prev]);
+            setBoletos(prev => {
+                const newBoleto: Boleto = {
+                    ...boletoData,
+                    amount: Number(boletoData.amount),
+                    id: Math.max(0, ...prev.map(b => b.id), 0) + 1,
+                    paid: false,
+                };
+                return [...prev, newBoleto];
+            });
         }
-    };
+    }, []);
 
-    const handleDeleteGoal = (id: number) => {
-        setGoals(goals.filter(g => g.id !== id));
-    };
-
-    const handleContributeToGoal = (goalId: number, amount: number) => {
-        setGoals(goals.map(g => g.id === goalId ? {...g, currentAmount: g.currentAmount + amount} : g));
-    };
+    const handleDeleteBoleto = useCallback((id: number) => {
+        setBoletos(prev => prev.filter(b => b.id !== id));
+    }, []);
 
 
   // FIX: Calculate KPI data from transactions to provide context for the AI chat, resolving the missing 'dashboard' property error.
@@ -216,6 +255,8 @@ const App: React.FC = () => {
         return <Transactions transactions={transactions} onSave={handleSaveTransaction} onDelete={handleDeleteTransaction} />;
       case 'calendar':
         return <Calendar />;
+      case 'checklist':
+        return <Checklist boletos={boletos} onTogglePaid={handleToggleBoletoPaid} onSave={handleSaveBoleto} onDelete={handleDeleteBoleto} />;
       case 'reports':
         return <Reports />;
       case 'community':

@@ -1,10 +1,11 @@
 
 
+
 import React from 'react';
-import { ChartPieIcon, DocumentTextIcon, CalendarIcon, ChartBarIcon, ChatBubbleLeftRightIcon, UsersIcon, TargetIcon, Cog6ToothIcon } from './icons/Icons';
+import { ChartPieIcon, DocumentTextIcon, CalendarIcon, ChartBarIcon, ChatBubbleLeftRightIcon, UsersIcon, TargetIcon, Cog6ToothIcon, ClipboardDocumentListIcon } from './icons/Icons';
 
 // FIX: Add 'profile' to the Screen type to match the definition in App.tsx and prevent type errors.
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile';
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile' | 'checklist';
 
 interface SidebarProps {
   activeScreen: Screen;
@@ -52,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeScreen, setActiveScreen,
           <NavItem icon={<ChartPieIcon />} label="Dashboard" isActive={activeScreen === 'dashboard'} onClick={() => setActiveScreen('dashboard')} />
           <NavItem icon={<DocumentTextIcon />} label="Transações" isActive={activeScreen === 'transactions'} onClick={() => setActiveScreen('transactions')} />
           <NavItem icon={<CalendarIcon />} label="Calendário" isActive={activeScreen === 'calendar'} onClick={() => setActiveScreen('calendar')} />
+          <NavItem icon={<ClipboardDocumentListIcon />} label="Checklist Boletos" isActive={activeScreen === 'checklist'} onClick={() => setActiveScreen('checklist')} />
           <NavItem icon={<ChartBarIcon />} label="Relatórios" isActive={activeScreen === 'reports'} onClick={() => setActiveScreen('reports')} />
           <NavItem icon={<ChatBubbleLeftRightIcon />} label="MestreIA" isActive={activeScreen === 'mestreIA'} onClick={() => setActiveScreen('mestreIA')} />
           <NavItem icon={<UsersIcon />} label="Comunidade" isActive={activeScreen === 'community'} onClick={() => setActiveScreen('community')} />
