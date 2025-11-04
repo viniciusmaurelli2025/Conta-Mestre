@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { ArrowPathIcon } from './icons/Icons';
 
@@ -7,9 +6,9 @@ const formatCurrency = (value: number) => {
 };
 
 export const CMVReport: React.FC = () => {
-    const [initialStock, setInitialStock] = useState<number | string>(15000);
-    const [purchases, setPurchases] = useState<number | string>(70000);
-    const [finalStock, setFinalStock] = useState<number | string>(20000);
+    const [initialStock, setInitialStock] = useState<number | string>(0);
+    const [purchases, setPurchases] = useState<number | string>(0);
+    const [finalStock, setFinalStock] = useState<number | string>(0);
 
     const cmv = useMemo(() => {
         const ei = typeof initialStock === 'number' ? initialStock : 0;

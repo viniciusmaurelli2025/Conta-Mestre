@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage } from '../types';
+import { ChatMessage, UserData } from '../types';
 import { askMestreIA } from '../services/geminiService';
 import { PaperAirplaneIcon, SparklesIcon } from './icons/Icons';
 
@@ -21,7 +20,11 @@ const ChatBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
   );
 };
 
-export const MestreIAChat: React.FC = () => {
+interface MestreIAChatProps {
+  userData: UserData;
+}
+
+export const MestreIAChat: React.FC<MestreIAChatProps> = ({ userData }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'model',
@@ -46,7 +49,7 @@ export const MestreIAChat: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const responseText = await askMestreIA(input, messages);
+      const responseText = await askMestreIA(input, messages, userData);
       const modelMessage: ChatMessage = { role: 'model', text: responseText };
       setMessages((prev) => [...prev, modelMessage]);
     } catch (error) {
@@ -61,9 +64,9 @@ export const MestreIAChat: React.FC = () => {
   };
   
   const quickActions = [
-    "Qual será minha estimativa de IRPF este ano?",
-    "Me dê dicas para reduzir minhas despesas.",
-    "Como calcular o CMV da minha empresa?",
+    "Qual foi meu maior gasto este mês?",
+    "Me dê um resumo da minha saúde financeira.",
+    "Estou no caminho certo para minha meta de viagem?",
     "Crie um plano de economia para uma viagem."
   ]
 

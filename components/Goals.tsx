@@ -1,22 +1,7 @@
-
 import React, { useState, useMemo } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, XMarkIcon, BanknotesIcon, PaperAirplaneIcon, DocumentTextIcon, WalletIcon, TargetIcon } from './icons/Icons';
 import { PlaceholderScreen } from './PlaceholderScreen';
-
-interface Goal {
-    id: number;
-    name: string;
-    icon: React.ReactElement;
-    currentAmount: number;
-    targetAmount: number;
-    targetDate: string;
-}
-
-const initialGoals: Goal[] = [
-    { id: 1, name: 'Viagem para a Europa', icon: <PaperAirplaneIcon className="w-8 h-8"/>, currentAmount: 7500, targetAmount: 20000, targetDate: '2024-12-31' },
-    { id: 2, name: 'Reserva de Emergência', icon: <WalletIcon className="w-8 h-8"/>, currentAmount: 12000, targetAmount: 15000, targetDate: '2024-08-01' },
-    { id: 3, name: 'Entrada do Apartamento', icon: <BanknotesIcon className="w-8 h-8"/>, currentAmount: 23500, targetAmount: 50000, targetDate: '2025-06-30' },
-];
+import { Goal } from '../types';
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
@@ -157,9 +142,14 @@ const GoalCard: React.FC<{
     );
 };
 
+interface GoalsProps {
+    goals: Goal[];
+    onSave: (goalData: Omit<Goal, 'id' | 'icon'> & { id?: number }) => void;
+    onDelete: (id: number) => void;
+    onContribute: (goalId: number, amount: number) => void;
+}
 
-export const Goals: React.FC = () => {
-    const [goals, setGoals] = useState<Goal[]>(initialGoals);
+export const Goals: React.FC<GoalsProps> = ({ goals, onSave, onDelete, onContribute }) => {
     const [modal, setModal] = useState<'none' | 'goal' | 'contribution'>('none');
     const [selectedGoal, setSelectedGoal] = useState<Goal | Partial<Goal> | null>(null);
 
@@ -179,28 +169,21 @@ export const Goals: React.FC = () => {
     };
 
     const handleSaveGoal = (goalData: Omit<Goal, 'id' | 'icon'> & { id?: number }) => {
-        if (goalData.id) {
-            setGoals(goals.map(g => g.id === goalData.id ? { ...g, ...goalData } : g));
-        } else {
-            const newGoal: Goal = {
-                ...goalData,
-                id: Math.max(0, ...goals.map(g => g.id)) + 1,
-                icon: <DocumentTextIcon className="w-8 h-8"/>, // Default icon for new goals
-            };
-            setGoals([newGoal, ...goals]);
-        }
+        onSave(goalData);
         handleCloseModal();
     };
     
     const handleSaveContribution = (amount: number) => {
-        if (selectedGoal && 'id' in selectedGoal) {
-             setGoals(goals.map(g => g.id === selectedGoal.id ? {...g, currentAmount: g.currentAmount + amount} : g));
+        if (selectedGoal && 'id' in selectedGoal && selectedGoal.id) {
+            onContribute(selectedGoal.id, amount);
         }
         handleCloseModal();
     };
 
     const handleDeleteGoal = (id: number) => {
-        setGoals(goals.filter(g => g.id !== id));
+        if(window.confirm('Tem certeza que deseja excluir esta meta?')) {
+            onDelete(id);
+        }
     };
 
     return (

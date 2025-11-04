@@ -1,31 +1,11 @@
-
 import React, { useState, useMemo } from 'react';
-import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon } from './icons/Icons';
+import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, XMarkIcon } from './icons/Icons';
+import { Transaction, TransactionType } from '../types';
 
-type TransactionType = 'income' | 'expense';
-
-interface Transaction {
-  id: number;
-  description: string;
-  amount: number;
-  type: TransactionType;
-  category: string;
-  date: string;
-}
-
-const mockTransactions: Transaction[] = [
-  { id: 1, description: 'Salário Mensal', amount: 5000, type: 'income', category: 'Salário', date: '2023-10-05' },
-  { id: 2, description: 'Aluguel', amount: 1200, type: 'expense', category: 'Moradia', date: '2023-10-07' },
-  { id: 3, description: 'Supermercado', amount: 450.75, type: 'expense', category: 'Alimentação', date: '2023-10-10' },
-  { id: 4, description: 'Projeto Freelance', amount: 800, type: 'income', category: 'Freelance', date: '2023-10-12' },
-  { id: 5, description: 'Internet e TV', amount: 99.90, type: 'expense', category: 'Contas', date: '2023-10-15' },
-  { id: 6, description: 'Jantar com amigos', amount: 120, type: 'expense', category: 'Lazer', date: '2023-10-18' },
-];
-
-const categories = ['Salário', 'Moradia', 'Alimentação', 'Freelance', 'Contas', 'Lazer', 'Transporte', 'Saúde'];
+const categories = ['Salário', 'Moradia', 'Alimentação', 'Freelance', 'Contas', 'Lazer', 'Transporte', 'Saúde', 'Investimentos', 'Outros'];
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-const formatDate = (dateString: string) => new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR');
+const formatDate = (dateString: string) => new Date(dateString + 'T00:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
 const TransactionModal: React.FC<{
     transaction: Partial<Transaction> | null;
@@ -43,11 +23,21 @@ const TransactionModal: React.FC<{
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: name === 'amount' ? parseFloat(value) : value }));
+        let processedValue: string | number = value;
+
+        if (name === 'amount') {
+           processedValue = value ? parseFloat(value) : '';
+        }
+
+        setFormData(prev => ({ ...prev, [name]: processedValue }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if(formData.amount <= 0) {
+            alert("O valor da transação deve ser positivo.");
+            return;
+        }
         onSave(formData);
     };
 
@@ -65,7 +55,7 @@ const TransactionModal: React.FC<{
                     </div>
                      <div>
                         <label className="text-sm font-medium text-dark-gray block mb-1">Valor</label>
-                        <input type="number" name="amount" value={formData.amount} onChange={handleChange} className="w-full border-gray-300 rounded-lg focus:ring-primary-green" required/>
+                        <input type="number" name="amount" value={formData.amount} onChange={handleChange} step="0.01" min="0.01" className="w-full border-gray-300 rounded-lg focus:ring-primary-green" required/>
                     </div>
                     <div className="flex gap-4">
                         <div className="flex-1">
@@ -96,30 +86,28 @@ const TransactionModal: React.FC<{
     );
 };
 
+interface TransactionsProps {
+    transactions: Transaction[];
+    onSave: (transactionData: Omit<Transaction, 'id'> & { id?: number }) => void;
+    onDelete: (id: number) => void;
+}
 
-export const Transactions: React.FC = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
+export const Transactions: React.FC<TransactionsProps> = ({ transactions, onSave, onDelete }) => {
     const [showModal, setShowModal] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Partial<Transaction> | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState<'all' | TransactionType>('all');
 
     const handleSave = (transactionData: Omit<Transaction, 'id'> & { id?: number }) => {
-        if (transactionData.id) {
-            setTransactions(transactions.map(t => t.id === transactionData.id ? { ...t, ...transactionData } as Transaction : t));
-        } else {
-            const newTransaction: Transaction = {
-                ...transactionData,
-                id: Math.max(0, ...transactions.map(t => t.id)) + 1,
-            };
-            setTransactions([newTransaction, ...transactions]);
-        }
+        onSave(transactionData);
         setShowModal(false);
         setEditingTransaction(null);
     };
 
     const handleDelete = (id: number) => {
-        setTransactions(transactions.filter(t => t.id !== id));
+        if (window.confirm('Tem certeza que deseja excluir esta transação?')) {
+            onDelete(id);
+        }
     };
 
     const filteredTransactions = useMemo(() => {
@@ -183,7 +171,7 @@ export const Transactions: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-                 {filteredTransactions.length === 0 && <p className="text-center text-gray-500 py-8">Nenhuma transação encontrada.</p>}
+                 {filteredTransactions.length === 0 && <p className="text-center text-gray-500 py-8">Nenhuma transação encontrada. Clique em 'Adicionar Transação' para começar.</p>}
             </div>
         </div>
     );

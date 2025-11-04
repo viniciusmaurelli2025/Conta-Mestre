@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -7,11 +6,16 @@ import { MestreIAChat } from './components/MestreIAChat';
 import { Reports } from './components/Reports';
 import { Community } from './components/Community';
 import { Transactions } from './components/Transactions';
-import { Calendar } from './components/Calendar';
+import { Calendar, mockEvents } from './components/Calendar';
 import { Settings } from './components/Settings';
 import { Goals } from './components/Goals';
+import { LoginScreen } from './components/LoginScreen';
+import { Profile } from './components/Profile';
+import { UserProfile, Transaction, Goal } from './types';
+import { DocumentTextIcon } from './components/icons/Icons';
 
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings';
+
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile';
 
 export interface Theme {
   logo: string | null;
@@ -35,6 +39,70 @@ const hexToRgb = (hex: string): string => {
 const App: React.FC = () => {
   const [activeScreen, setActiveScreen] = useState<Screen>('dashboard');
   const [theme, setTheme] = useState<Theme>(defaultTheme);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: 'Usuário',
+    email: 'usuario@contamestre.com',
+    bio: 'Adicione uma bio para se apresentar à comunidade.',
+    profession: 'Sua Profissão',
+    website: '',
+    avatar: 'https://picsum.photos/100/100',
+    coverPhoto: null,
+  });
+
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    setUserProfile(updatedProfile);
+    // In a real app, you would also save this to a backend.
+  };
+
+  const handleSaveTransaction = (transactionData: Omit<Transaction, 'id'> & { id?: number }) => {
+        if (transactionData.id) {
+            setTransactions(transactions.map(t => t.id === transactionData.id ? { ...t, ...transactionData } as Transaction : t));
+        } else {
+            const newTransaction: Transaction = {
+                ...transactionData,
+                id: Math.max(0, ...transactions.map(t => t.id)) + 1,
+            };
+            setTransactions(prev => [newTransaction, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        }
+    };
+
+    const handleDeleteTransaction = (id: number) => {
+        setTransactions(transactions.filter(t => t.id !== id));
+    };
+
+    const handleSaveGoal = (goalData: Omit<Goal, 'id' | 'icon'> & { id?: number }) => {
+        if (goalData.id) {
+            setGoals(goals.map(g => g.id === goalData.id ? { ...g, ...goalData } as Goal : g));
+        } else {
+            const newGoal: Goal = {
+                ...goalData,
+                id: Math.max(0, ...goals.map(g => g.id)) + 1,
+                icon: <DocumentTextIcon className="w-8 h-8"/>,
+            };
+            setGoals(prev => [newGoal, ...prev]);
+        }
+    };
+
+    const handleDeleteGoal = (id: number) => {
+        setGoals(goals.filter(g => g.id !== id));
+    };
+
+    const handleContributeToGoal = (goalId: number, amount: number) => {
+        setGoals(goals.map(g => g.id === goalId ? {...g, currentAmount: g.currentAmount + amount} : g));
+    };
+
+
+  // In a real app, this data would come from a central state management store or API
+  const userData = {
+    // dashboard: kpiData, // Dashboard data is now derived from transactions
+    transactions: transactions,
+    calendarEvents: mockEvents,
+    goals: goals,
+  };
 
   const applyTheme = useCallback((themeToApply: Theme) => {
     document.documentElement.style.setProperty('--color-primary-rgb', hexToRgb(themeToApply.primaryColor));
@@ -76,35 +144,50 @@ const App: React.FC = () => {
       console.error("Failed to reset theme", e);
     }
   };
+  
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+  
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setActiveScreen('dashboard'); // Reset to default screen on logout
+  };
 
   const renderScreen = () => {
     switch (activeScreen) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard transactions={transactions} />;
       case 'mestreIA':
-        return <MestreIAChat />;
+        return <MestreIAChat userData={userData} />;
       case 'transactions':
-        return <Transactions />;
+        return <Transactions transactions={transactions} onSave={handleSaveTransaction} onDelete={handleDeleteTransaction} />;
       case 'calendar':
         return <Calendar />;
       case 'reports':
         return <Reports />;
       case 'community':
-        return <Community />;
-      case 'goals':
-        return <Goals />;
+        return <Community userProfile={userProfile} />;
+       case 'goals':
+        return <Goals goals={goals} onSave={handleSaveGoal} onDelete={handleDeleteGoal} onContribute={handleContributeToGoal} />;
        case 'settings':
-        return <Settings theme={theme} onThemeChange={handleThemeChange} onResetTheme={handleResetTheme} />;
+        return <Settings theme={theme} onThemeChange={handleThemeChange} onResetTheme={handleResetTheme} userProfile={userProfile} onProfileUpdate={handleProfileUpdate} />;
+       case 'profile':
+        return <Profile profile={userProfile} onUpdate={handleProfileUpdate} />;
       default:
-        return <Dashboard />;
+        return <Dashboard transactions={transactions} />;
     }
   };
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="flex h-screen bg-light-gray font-sans text-dark-gray">
       <Sidebar activeScreen={activeScreen} setActiveScreen={setActiveScreen} logo={theme.logo} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+        <Header onLogout={handleLogout} userProfile={userProfile} setActiveScreen={setActiveScreen} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-light-gray p-4 sm:p-6 lg:p-8">
           {renderScreen()}
         </main>

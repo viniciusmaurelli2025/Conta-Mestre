@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { ArrowUpTrayIcon } from './icons/Icons';
 
 const formatCurrency = (value: number) => {
     const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -7,12 +7,12 @@ const formatCurrency = (value: number) => {
 };
 
 const dreData = {
-    grossRevenue: 150000,
-    deductions: 12000,
-    cmv: 65000,
-    operatingExpenses: 25000,
-    financialResult: -1500,
-    taxEstimate: 12000
+    grossRevenue: 0,
+    deductions: 0,
+    cmv: 0,
+    operatingExpenses: 0,
+    financialResult: 0,
+    taxEstimate: 0
 };
 
 const DRELine: React.FC<{ label: string; value: number; isTotal?: boolean; isSub?: boolean; isNegative?: boolean; isFinal?: boolean }> = 
@@ -30,6 +30,42 @@ export const DREReport: React.FC = () => {
     const resultBeforeTax = operatingResult + dreData.financialResult;
     const netProfit = resultBeforeTax - dreData.taxEstimate;
 
+    const handleExport = () => {
+        const reportLines = [
+            { label: "Receita Bruta de Vendas", value: dreData.grossRevenue },
+            { label: "(-) Deduções da Receita Bruta", value: -dreData.deductions },
+            { label: "= Receita Operacional Líquida", value: netRevenue },
+            { label: "(-) Custo das Mercadorias Vendidas (CMV)", value: -dreData.cmv },
+            { label: "= Lucro Bruto", value: grossProfit },
+            { label: "(-) Despesas Operacionais", value: -dreData.operatingExpenses },
+            { label: "= Resultado Operacional", value: operatingResult },
+            { label: "(+/-) Resultado Financeiro", value: dreData.financialResult },
+            { label: "= Resultado Antes do Imposto de Renda", value: resultBeforeTax },
+            { label: "(-) Estimativa de Impostos (IR)", value: -dreData.taxEstimate },
+            { label: "= Lucro Líquido do Exercício", value: netProfit },
+        ];
+
+        const header = ["Descrição", "Valor"];
+        const rows = reportLines.map(line => [
+            `"${line.label.replace(/"/g, '""')}"`, // Escape double quotes for CSV
+            line.value.toFixed(2)
+        ]);
+
+        const csvContent = [header.join(','), ...rows.map(row => row.join(','))].join('\n');
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "Relatorio_DRE.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
+
     return (
         <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md">
             <div className="max-w-3xl mx-auto">
@@ -38,7 +74,10 @@ export const DREReport: React.FC = () => {
                         <h3 className="text-xl font-bold text-dark-gray">Demonstração do Resultado (DRE)</h3>
                         <p className="text-sm text-gray-500">Período: Último Trimestre</p>
                     </div>
-                    <button className="px-4 py-2 text-sm bg-primary-green text-white rounded-lg hover:bg-green-800">Exportar</button>
+                    <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 text-sm bg-primary-green text-white rounded-lg hover:bg-green-800 transition-colors">
+                        <ArrowUpTrayIcon className="w-4 h-4" />
+                        Exportar
+                    </button>
                 </div>
 
                 <div className="space-y-1">

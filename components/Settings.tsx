@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Theme } from '../App';
 import { ArrowUpTrayIcon, TrashIcon } from './icons/Icons';
+import { UserProfile } from '../types';
 
 const Toggle: React.FC<{ label: string; enabled: boolean; onChange: (enabled: boolean) => void }> = ({ label, enabled, onChange }) => (
     <label className="flex items-center justify-between cursor-pointer">
@@ -17,10 +18,11 @@ interface SettingsProps {
     theme: Theme;
     onThemeChange: (newTheme: Partial<Theme>) => void;
     onResetTheme: () => void;
+    userProfile: UserProfile;
+    onProfileUpdate: (updatedProfile: UserProfile) => void;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ theme, onThemeChange, onResetTheme }) => {
-    const [profile] = useState({ name: 'Usuário', email: 'usuario@contamestre.com' });
+export const Settings: React.FC<SettingsProps> = ({ theme, onThemeChange, onResetTheme, userProfile }) => {
     const [notifications, setNotifications] = useState({
         upcomingBills: true,
         unusualExpenses: true,
@@ -52,7 +54,7 @@ export const Settings: React.FC<SettingsProps> = ({ theme, onThemeChange, onRese
 
     const handleSave = () => {
         setSaveStatus('saving');
-        // Simulate API call
+        // In a real app, you would save notifications settings here.
         setTimeout(() => {
             setSaveStatus('success');
         }, 1500);
@@ -71,10 +73,11 @@ export const Settings: React.FC<SettingsProps> = ({ theme, onThemeChange, onRese
         <div className="max-w-4xl mx-auto space-y-8">
             <h2 className="text-3xl font-bold text-dark-gray">Configurações</h2>
             
-            {/* Profile Info Card */}
+            {/* Account Info Card */}
             <div className="bg-white p-6 rounded-2xl shadow-md">
+                <h3 className="text-xl font-bold text-dark-gray mb-4">Conta</h3>
                 <p className="text-sm text-gray-500">Email</p>
-                <p className="text-dark-gray font-semibold mt-1">{profile.email}</p>
+                <p className="text-dark-gray font-semibold mt-1">{userProfile.email}</p>
             </div>
 
             {/* Notifications Section */}

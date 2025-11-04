@@ -1,17 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowLeftIcon, ArrowRightIcon, BellIcon, CheckCircleIcon, ClockIcon, ExclamationTriangleIcon, PencilIcon, PlusIcon, TrashIcon, XMarkIcon } from './icons/Icons';
-
-interface CalendarEvent {
-  id: number;
-  title: string;
-  date: Date;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
-  urgency: 'high' | 'medium' | 'low';
-  time?: string;
-  notes?: string;
-  reminder: 'none' | '1h' | '1d' | '2d';
-}
+import { CalendarEvent } from '../types';
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -23,15 +12,7 @@ const getRelativeDate = (dayOffset: number) => {
 }
 
 
-const mockEvents: CalendarEvent[] = [
-  { id: 1, title: "Aluguel", date: getRelativeDate(-2), amount: 1200, status: 'overdue', urgency: 'high', time: '10:00', notes: 'Pago via PIX', reminder: '1d' },
-  { id: 2, title: "Fatura Cartão", date: getRelativeDate(3), amount: 854.90, status: 'pending', urgency: 'high', time: '09:00', notes: '', reminder: 'none' },
-  { id: 3, title: "Internet", date: getRelativeDate(8), amount: 99.90, status: 'pending', urgency: 'medium', time: '14:00', notes: 'Débito automático', reminder: '2d' },
-  { id: 4, title: "Salário", date: today, amount: 5000, status: 'paid', urgency: 'low', time: '08:00', notes: 'Adiantamento recebido', reminder: 'none' },
-  { id: 5, title: "Conta de Luz", date: getRelativeDate(10), amount: 150.25, status: 'pending', urgency: 'medium', time: '11:00', notes: '', reminder: '1d' },
-  { id: 6, title: "Assinatura Netflix", date: getRelativeDate(15), amount: 39.90, status: 'pending', urgency: 'low', time: '00:00', notes: '', reminder: 'none' },
-  { id: 7, title: "Consulta Médica", date: today, amount: 250.00, status: 'pending', urgency: 'high', time: '15:30', notes: 'Dr. Roberto', reminder: '1h' },
-];
+export const mockEvents: CalendarEvent[] = [];
 
 
 const dateToISOString = (date: Date) => date.toISOString().split('T')[0];
@@ -242,9 +223,8 @@ export const Calendar: React.FC = () => {
         if (eventsForDay.length > 0) {
             setIsListModalOpen(true);
         } else {
-            // Optionally open edit modal directly if no events
-            // setEditingEvent({ date });
-            // setIsEditModalOpen(true);
+            setEditingEvent({ date });
+            setIsEditModalOpen(true);
         }
     };
 
