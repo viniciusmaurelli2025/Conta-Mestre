@@ -9,8 +9,9 @@ import { Community } from './components/Community';
 import { Transactions } from './components/Transactions';
 import { Calendar } from './components/Calendar';
 import { Settings } from './components/Settings';
+import { Goals } from './components/Goals';
 
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'settings';
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings';
 
 export interface Theme {
   logo: string | null;
@@ -90,6 +91,8 @@ const App: React.FC = () => {
         return <Reports />;
       case 'community':
         return <Community />;
+      case 'goals':
+        return <Goals />;
        case 'settings':
         return <Settings theme={theme} onThemeChange={handleThemeChange} onResetTheme={handleResetTheme} />;
       default:

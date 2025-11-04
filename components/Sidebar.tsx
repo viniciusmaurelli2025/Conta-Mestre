@@ -1,7 +1,8 @@
-import React from 'react';
-import { ChartPieIcon, DocumentTextIcon, CalendarIcon, ChartBarIcon, ChatBubbleLeftRightIcon, UsersIcon, TargetIcon } from './icons/Icons';
 
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'settings';
+import React from 'react';
+import { ChartPieIcon, DocumentTextIcon, CalendarIcon, ChartBarIcon, ChatBubbleLeftRightIcon, UsersIcon, TargetIcon, Cog6ToothIcon } from './icons/Icons';
+
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings';
 
 interface SidebarProps {
   activeScreen: Screen;
@@ -52,7 +53,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeScreen, setActiveScreen,
           <NavItem icon={<ChartBarIcon />} label="Relatórios" isActive={activeScreen === 'reports'} onClick={() => setActiveScreen('reports')} />
           <NavItem icon={<ChatBubbleLeftRightIcon />} label="MestreIA" isActive={activeScreen === 'mestreIA'} onClick={() => setActiveScreen('mestreIA')} />
           <NavItem icon={<UsersIcon />} label="Comunidade" isActive={activeScreen === 'community'} onClick={() => setActiveScreen('community')} />
-          <NavItem icon={<TargetIcon />} label="Configurações" isActive={activeScreen === 'settings'} onClick={() => setActiveScreen('settings')} />
+          <NavItem icon={<TargetIcon />} label="Metas" isActive={activeScreen === 'goals'} onClick={() => setActiveScreen('goals')} />
+          <NavItem icon={<Cog6ToothIcon />} label="Configurações" isActive={activeScreen === 'settings'} onClick={() => setActiveScreen('settings')} />
         </ul>
       </nav>
     </aside>
