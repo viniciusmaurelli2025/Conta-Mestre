@@ -1,8 +1,10 @@
 
+
 import React from 'react';
 import { ChartPieIcon, DocumentTextIcon, CalendarIcon, ChartBarIcon, ChatBubbleLeftRightIcon, UsersIcon, TargetIcon, Cog6ToothIcon } from './icons/Icons';
 
-type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings';
+// FIX: Add 'profile' to the Screen type to match the definition in App.tsx and prevent type errors.
+type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile';
 
 interface SidebarProps {
   activeScreen: Screen;

@@ -273,8 +273,19 @@ const PostCard: React.FC<any> = ({ post, userProfile, userReaction, isCommentsEx
     const [shareStatus, setShareStatus] = useState('Compartilhar');
     
     const handleShare = () => {
-        const postUrl = `${window.location.origin}/post/${post.id}`;
-        navigator.clipboard.writeText(postUrl).then(() => {
+        let shareContent = `Confira esta publicação de ${post.author} na comunidade ContaMestre:\n\n`;
+        if (post.content) {
+            shareContent += `"${post.content}"\n\n`;
+        }
+        if (post.poll) {
+            shareContent += `Enquete: "${post.poll.question}"\n\n`;
+        }
+        if (post.imageUrl || post.videoUrl || post.gifUrl) {
+            shareContent += `A publicação contém mídia. Veja na plataforma!\n\n`;
+        }
+        shareContent += `Acesse em: ${window.location.href}`;
+
+        navigator.clipboard.writeText(shareContent).then(() => {
             setShareStatus('Copiado!');
             setTimeout(() => setShareStatus('Compartilhar'), 2000);
         });

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Dashboard } from './components/Dashboard';
@@ -11,8 +12,8 @@ import { Settings } from './components/Settings';
 import { Goals } from './components/Goals';
 import { LoginScreen } from './components/LoginScreen';
 import { Profile } from './components/Profile';
-import { UserProfile, Transaction, Goal } from './types';
-import { DocumentTextIcon } from './components/icons/Icons';
+import { UserProfile, Transaction, Goal, Kpi } from './types';
+import { DocumentTextIcon, WalletIcon, ArrowUpIcon, ArrowDownIcon, CalendarDaysIcon } from './components/icons/Icons';
 
 
 type Screen = 'dashboard' | 'transactions' | 'calendar' | 'reports' | 'mestreIA' | 'community' | 'goals' | 'settings' | 'profile';
@@ -34,6 +35,8 @@ const hexToRgb = (hex: string): string => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` : '0 122 94';
 };
+
+const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
 
 const App: React.FC = () => {
@@ -96,9 +99,58 @@ const App: React.FC = () => {
     };
 
 
+  // FIX: Calculate KPI data from transactions to provide context for the AI chat, resolving the missing 'dashboard' property error.
+  const kpiData = useMemo((): Kpi[] => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let totalBalance = 0;
+    let monthlyIncome = 0;
+    let monthlyExpenses = 0;
+
+    transactions.forEach(t => {
+        if (t.type === 'income') {
+            totalBalance += t.amount;
+        } else {
+            totalBalance -= t.amount;
+        }
+
+        const transactionDate = new Date(t.date + 'T00:00:00');
+        const transactionMonth = transactionDate.getMonth();
+        const transactionYear = transactionDate.getFullYear();
+
+        if (transactionYear === currentYear && transactionMonth === currentMonth) {
+            if (t.type === 'income') {
+                monthlyIncome += t.amount;
+            } else {
+                monthlyExpenses += t.amount;
+            }
+        }
+    });
+    
+    const upcomingBills = transactions
+        .filter(t => t.type === 'expense' && new Date(t.date + 'T00:00:00') >= now)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+    const nextBillTransaction = upcomingBills[0];
+    const nextBill = nextBillTransaction ? {
+        name: nextBillTransaction.description,
+        amount: formatCurrency(nextBillTransaction.amount),
+    } : null;
+
+    return [
+      { title: "Saldo Total", value: formatCurrency(totalBalance), changeType: "none", icon: <WalletIcon/> },
+      { title: "Receitas (Mês)", value: formatCurrency(monthlyIncome), changeType: "none", icon: <ArrowUpIcon/> },
+      { title: "Despesas (Mês)", value: formatCurrency(monthlyExpenses), changeType: "none", icon: <ArrowDownIcon/> },
+      { title: "Próximo Vencimento", value: nextBill ? nextBill.amount : "R$ 0,00", subtext: nextBill ? nextBill.name : "Nenhum vencimento", changeType: "none", icon: <CalendarDaysIcon/> },
+    ];
+  }, [transactions]);
+
+
   // In a real app, this data would come from a central state management store or API
   const userData = {
-    // dashboard: kpiData, // Dashboard data is now derived from transactions
+    dashboard: kpiData,
     transactions: transactions,
     calendarEvents: mockEvents,
     goals: goals,
